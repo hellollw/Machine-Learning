@@ -9,6 +9,12 @@
 数据训练：
 本次采用著名的iris数据集（鸢尾花），其中包含了150个样本，一共3个类别，每5个样本取出一个作为测试集
 
+构造多分类训练数据集：
+因为自己写了一个ConstructTrainingSet函数，故：
+    输入训练集样本数据需要为float
+    输入训练集样本标签可为任意格式
+    具体格式可参考iris数据集
+
 """
 from numpy import *
 import SVM as SVM  # 导入SVM分类器（SMO算法实现）
@@ -45,7 +51,7 @@ def readData(path):
 # 输入：训练集数据矩阵：trainingData, 训练集样本标签矩阵:trainingLabel
 # 输出：种类索引：Numlist, 标签列表：WholeLabelList， 训练数据列表:trainingList, 训练标签列表:trainingLabelList
 def ConstructTrainingSet(trainingData, trainingLabel):
-    m, n = shape(trainingData)
+    m, n = shape(mat(trainingData))
     trainingList = []
     trainingLabelList = []
     WholeLabelList = []

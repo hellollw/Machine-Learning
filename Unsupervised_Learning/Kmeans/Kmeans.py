@@ -66,24 +66,24 @@ def distEclud(vecA, vecB):
 # 随机初始化初始k码本
 # 输入：样本集合，码本数量
 # 输出：初始化的k个码本矩阵
-def randCent(dataSet, k):
-    n = shape(dataSet)[1]  # 取特征数量
+def randCent(dataMat, k):
+    n = shape(dataMat)[1]  # 取特征数量
     centroids = mat(zeros((k, n)))
 
     for j in range(n):
-        minJ = min(dataSet[:, j])
-        maxJ = max(dataSet[:, j])  # 这里返回的依然是矩阵，即1x1的矩阵，需要转换为数值型才可可以相乘
+        minJ = min(dataMat[:, j])
+        maxJ = max(dataMat[:, j])  # 这里返回的依然是矩阵，即1x1的矩阵，需要转换为数值型才可可以相乘
         rangeJ = float(maxJ - minJ)  # 这里将矩阵转换为数值型数据
         centroids[:, j] = minJ + rangeJ * random.rand(k, 1)  # 取k个0~1之间的数作为乘积
     return centroids
 
 
 # K均值聚类算法
-# 输入：训练集dataSet，码本数量k
+# 输入：训练集dataMat，码本数量k
 # 输出：簇中心centroids, 各个样本分类clusterassment
-def kMeans(dataSet, k, distMeasure=distEclud, createinicent=randCent):
-    m = shape(dataSet)[0]  # 样本数量
-    centroids = createinicent(dataSet, k)
+def kMeans(dataMat, k, distMeasure=distEclud, createinicent=randCent):
+    m = shape(dataMat)[0]  # 样本数量
+    centroids = createinicent(dataMat, k)
     clusterassment = mat(zeros((m, 2)))
     clusterassment[:, 0] = inf
 
@@ -96,7 +96,7 @@ def kMeans(dataSet, k, distMeasure=distEclud, createinicent=randCent):
         for i in range(m):
             cluster_mindistance = inf
             for j in range(k):
-                distance = distMeasure(dataSet[i, :], centroids[j, :])
+                distance = distMeasure(dataMat[i, :], centroids[j, :])
                 if distance < cluster_mindistance:
                     cluster_mindistance = distance
                     minIndex = j
@@ -107,23 +107,23 @@ def kMeans(dataSet, k, distMeasure=distEclud, createinicent=randCent):
                 cluster_changed = True
         # 更新簇
         for cent in range(k):
-            centroids[cent, :] = mean(dataSet[nonzero(clusterassment[:, 0] == cent)[0], :], axis=0)  # 数组过滤
+            centroids[cent, :] = mean(dataMat[nonzero(clusterassment[:, 0] == cent)[0], :], axis=0)  # 数组过滤
     return centroids, clusterassment
 
 
 # 二分K均值聚类算法
-# 输入： 样本集dataSet,码本数量k
-# 输出： 测中心centroids, 各个样本分类clusterassment
-def biKmeans(dataSet, k, distMeasure=distEclud):
-    m = shape(dataSet)[0]
-    centroid = mean(dataSet, axis=0).tolist()[0]  # centroid的扩容需要使用list容器。只有list容器才能够使用append方法添加簇中心
+# 输入： 样本集dataMat,码本数量k
+# 输出： 簇中心centroids, 各个样本分类clusterassment
+def biKmeans(dataMat, k, distMeasure=distEclud):
+    m = shape(dataMat)[0]
+    centroid = mean(dataMat, axis=0).tolist()[0]  # centroid的扩容需要使用list容器。只有list容器才能够使用append方法添加簇中心
     centroids = [centroid]
     clusterassment = mat(zeros((m, 2)))
 
     while len(centroids) < k:
         lessSSE = inf
         for cent in range(len(centroids)):
-            Curdata = dataSet[nonzero(clusterassment[:, 0] == cent)[0], :]
+            Curdata = dataMat[nonzero(clusterassment[:, 0] == cent)[0], :]
 
             Currcentroids, Currclusterassment = kMeans(Curdata, 2,
                                                        distMeasure=distMeasure)
