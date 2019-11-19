@@ -3,6 +3,8 @@
 # Modified Time: 2019-11-13
 """
 SMO实现SVM算法
+
+核函数：定义一种运算（实际上是空间至空间的一种映射）
 """
 from numpy import *
 import matplotlib.pyplot as plt
@@ -89,7 +91,7 @@ def kernelCal(datam, datai, kTup):
     m, n = shape(datam)
     datai = mat(datai).transpose()  # 转换为列向量,transpose()默认与.T相同
     dataK = mat(zeros((m, 1)))
-    if kTup[0] == 'lin':
+    if kTup[0] == 'lin':    #该线性内核指的是向量内积运算
         dataK = datam * datai
     elif kTup[0] == 'rbf':
         sigma = kTup[1]
