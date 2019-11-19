@@ -5,6 +5,13 @@
 这里包含两种Kmeans算法
 第一种是最基础的Kmeans，其迭代终止条件为样本聚类不再发生改变
 第二种是基于基础Kmeans的二分Kmeans算法，其循环终止条件为码本数量达到所设定的数量，其基本原理是不断使用基础的Kmeans进行二分类，而后选取误差值改变最大的种群进行第二次分类，直至码本数量达到预设数量
+
+修改：
+1. 出现传入数组为空时报错
+RuntimeWarning: Mean of empty slice.
+解决：Kmeans函数的更新簇中心环节：
+        先判断数组是否为空，再传入。即如果分类后属于该标签的样本数量为0，则保持该簇中心不变
+
 """
 
 from numpy import *
@@ -34,7 +41,7 @@ def plotdata(dataMat, centroids, clusterassement):
 
         currentdata = dataMat[nonzero(clusterassement[:, 0] == i)[0], :]  # 数组过滤
         currentdata_x = currentdata[:, 0].flatten().A[0]
-        currentdata_y = currentdata[:, 1].flatten().A[0]    #降维
+        currentdata_y = currentdata[:, 1].flatten().A[0]  # 降维
         ax0.scatter(currentdata_x, currentdata_y, marker=marker, color=color)
 
     plt.show()
@@ -107,7 +114,10 @@ def kMeans(dataMat, k, distMeasure=distEclud, createinicent=randCent):
                 cluster_changed = True
         # 更新簇
         for cent in range(k):
-            centroids[cent, :] = mean(dataMat[nonzero(clusterassment[:, 0] == cent)[0], :], axis=0)  # 数组过滤
+            if len(nonzero(clusterassment[:, 0] == cent)[0]) != 0:  # 如果分类后属于该标签的样本数量为0，则保持该簇中心不变
+                centroids[cent, :] = mean(dataMat[nonzero(clusterassment[:, 0] == cent)[0], :], axis=0)  # 数组过滤
+            else:
+                continue
     return centroids, clusterassment
 
 
@@ -119,28 +129,31 @@ def biKmeans(dataMat, k, distMeasure=distEclud):
     centroid = mean(dataMat, axis=0).tolist()[0]  # centroid的扩容需要使用list容器。只有list容器才能够使用append方法添加簇中心
     centroids = [centroid]
     clusterassment = mat(zeros((m, 2)))
-
+    iter = 1
     while len(centroids) < k:
         lessSSE = inf
         for cent in range(len(centroids)):
-            Curdata = dataMat[nonzero(clusterassment[:, 0] == cent)[0], :]
+            if len(nonzero(clusterassment[:, 0] == cent)[0]):
+                Curdata = dataMat[nonzero(clusterassment[:, 0] == cent)[0], :]
 
-            Currcentroids, Currclusterassment = kMeans(Curdata, 2,
-                                                       distMeasure=distMeasure)
-            # 计算分类前的误差平方和
-            SSEnotsplit = sum(clusterassment[nonzero(clusterassment[:, 0] != cent)[0], 1])
-            # 计算分类后的误差平方和
-            SSEsplit = sum(Currclusterassment[:, 1])
-            CurrSSE = SSEnotsplit + SSEsplit
-            if CurrSSE < lessSSE:
-                Bestcent = cent
-                Bestcentroids = Currcentroids
-                Bestclusterassment = Currclusterassment
-                lessSSE = CurrSSE
-
+                Currcentroids, Currclusterassment = kMeans(Curdata, 2,
+                                                           distMeasure=distMeasure)
+                # 计算分类前的误差平方和
+                SSEnotsplit = sum(clusterassment[nonzero(clusterassment[:, 0] != cent)[0], 1])
+                # 计算分类后的误差平方和
+                SSEsplit = sum(Currclusterassment[:, 1])
+                CurrSSE = SSEnotsplit + SSEsplit
+                if CurrSSE < lessSSE:
+                    Bestcent = cent
+                    Bestcentroids = Currcentroids
+                    Bestclusterassment = Currclusterassment
+                    lessSSE = CurrSSE
+            else:
+                continue
         print('the bestcent is:', Bestcent)
         print('number:', len(Currclusterassment[:, 1]))
-
+        print('iter:', iter)
+        iter += 1
         # 更新簇分类
         Bestclusterassment[nonzero(Bestclusterassment[:, 0] == 1)[0], 0] = len(centroids)  # 更新标签值
         Bestclusterassment[nonzero(Bestclusterassment[:, 0] == 0)[

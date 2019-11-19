@@ -1,9 +1,9 @@
 # -*- coding:utf-8 -*-
 # Author: Lu Liwen
 # Modified Time: 2019-11-13
-'''
+"""
 SMO实现SVM算法
-'''
+"""
 from numpy import *
 import matplotlib.pyplot as plt
 
