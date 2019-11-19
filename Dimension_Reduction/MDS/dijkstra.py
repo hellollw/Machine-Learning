@@ -44,7 +44,6 @@ def dijkstra(distmat, start):
 
 
 
-
 if __name__ == '__main__':
     distmat = mat([[0, 4, inf, 2, inf],[4, 0, 4, 1, inf],[inf, 4, 0, 1, 3],[2, 1, 1, 0, 7],[inf, inf, 3, 7, 0]])
     start = 0
