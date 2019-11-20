@@ -54,6 +54,12 @@ def constructKmat(datamat, k):
             kmat[i, sampleindex[j]] = dataKernal[sampleindex[j], 0]  # 满足图的对称性
     return kmat
 
+# 构造距离矩阵dist(使用不同的内核取构造距离矩阵），经典MDS输入的距离矩阵应该为欧式矩阵
+# 输入：输入样本数据：datamat, 核方式:kTup
+# 输出：距离矩阵dist
+def constructDist(datamat,kTup):
+
+
 # 对样本之间的连接图进行Dijkstra算法处理，以最短路径作为样本间距离
 # 输入： 样本间的连接图：kmat
 # 输出：dijkstra算法输出的全连接图dijmat
