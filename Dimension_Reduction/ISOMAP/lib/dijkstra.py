@@ -4,6 +4,9 @@
 
 """
 Dijkstra算法
+
+修改：
+1. unfounded = distmat[start, :].A[0].copy()  #unfounded改变distmat发生改变， 不加copy()的话其传入的distmat会发生变化！（以后注意使用copy来分配内存）
 """
 
 from numpy import *
@@ -23,12 +26,11 @@ def getMin(row_array):
 def dijkstra(distmat, start):
     m = shape(distmat)[0]
     founded = zeros((1, m))[0] + inf
-    unfounded = distmat[start, :].A[0]
+    unfounded = distmat[start, :].A[0].copy()  #unfounded改变distmat发生改变
     passpath = [] #经过路径
     for i in range(m):
         passpath.append([start])
     for iter_num in range(m):
-        iter_num+=1
         cur_mindist,cur_minindex = getMin(unfounded)    #找出U中距离最小点
         founded[cur_minindex] = cur_mindist   #更新S集和
         unfounded[cur_minindex] = inf
