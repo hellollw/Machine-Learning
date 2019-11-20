@@ -16,10 +16,11 @@ from lib import MDS as MDS
 from numpy import *
 import matplotlib.pyplot as plt
 
+
 # 将训练集图示出来（适用于二维空间）——每个样本对应的标签值不同绘制的颜色不同
 # 输入：训练集：dataMat, 各个样本分类：clusterassement, 样本总标签序列：labellist
 # 输出：显示图像
-def plotdata(dataMat, clusterassement,labellist):
+def plotdata(dataMat, clusterassement, labellist):
     fig = plt.figure()
     ax0 = fig.add_subplot(111)
     ax0.set(title='Datashow', ylabel='Y-Axis', xlabel='X-Axis')
@@ -29,15 +30,16 @@ def plotdata(dataMat, clusterassement,labellist):
 
     m = shape(dataMat)[0]
     for i in range(m):
-        if clusterassement[i]==labellist[0]:
-            ax0.scatter(dataMat[i,0], dataMat[i,1], marker=markers[0], color=colors[0])
-        elif clusterassement[i]==labellist[1]:
+        if clusterassement[i] == labellist[0]:
+            ax0.scatter(dataMat[i, 0], dataMat[i, 1], marker=markers[0], color=colors[0])
+        elif clusterassement[i] == labellist[1]:
             ax0.scatter(dataMat[i, 0], dataMat[i, 1], marker=markers[1], color=colors[1])
-        elif clusterassement[i]==labellist[2]:
+        elif clusterassement[i] == labellist[2]:
             ax0.scatter(dataMat[i, 0], dataMat[i, 1], marker=markers[2], color=colors[2])
         else:
-            print(clusterassement[i]+'该标签不存在')
+            print(clusterassement[i] + '该标签不存在')
     plt.show()
+
 
 # 选取k近邻构建稀疏矩阵
 # 输入：输入样本数据：datamat, k近邻数量:k
@@ -54,10 +56,19 @@ def constructKmat(datamat, k):
             kmat[i, sampleindex[j]] = dataKernal[sampleindex[j], 0]  # 满足图的对称性
     return kmat
 
+
 # 构造距离矩阵dist(使用不同的内核取构造距离矩阵），经典MDS输入的距离矩阵应该为欧式矩阵
 # 输入：输入样本数据：datamat, 核方式:kTup
 # 输出：距离矩阵dist
-def constructDist(datamat,kTup):
+def constructDist(datamat, kTup):
+    m = shape(datamat)[0]
+    dist = mat(zeros((m, m)))
+    if kTup[0] == 'knn':  # knn近邻选取
+        dist = constructKmat(datamat, kTup[1])
+    else:   #其余的都在核函数函数中
+        for i in range(m):
+            dist[:, i] = Knn.kernelCal(datamat, datamat[i, :], kTup)
+    return dist
 
 
 # 对样本之间的连接图进行Dijkstra算法处理，以最短路径作为样本间距离
@@ -67,24 +78,24 @@ def dijkstra(kmat):
     m = shape(kmat)[0]
     dijmat = []
     for i in range(m):
-        founded,passpath = dij.dijkstra(kmat,i)
+        founded, passpath = dij.dijkstra(kmat, i)
         dijmat.append(founded)
     return mat(dijmat)
+
 
 # 使用ISOMAP来对样本进行降维
 # 输入： 样本数据：datamat,降至维度：d,选取的k近邻数量:k
 # 输出： 降维后的样本数据矩阵：lowdimensiondata
-def isomap(datamat,d,k):
-    kmat = constructKmat(datamat,k)
-    dijmat = dijkstra(kmat)
-    lowdimensiondata = MDS.mds(dijmat,d)
+def isomap(datamat, d, kTup):
+    kmat = constructDist(datamat,kTup)
+    dijmat =dijkstra(kmat)
+    lowdimensiondata = MDS.mds(dijmat, d)
     return lowdimensiondata
 
 
 if __name__ == '__main__':
     path = './test/iris.txt'
     trainingSet, traininglabel, testset, testlabel = Knn.readData(path)
-    labellist = ['Iris-setosa','Iris-versicolor','Iris-virginica']
-    lowdimensiondata = isomap(trainingSet,2,40)
-    plotdata(lowdimensiondata,traininglabel,labellist)
-
+    labellist = ['Iris-setosa', 'Iris-versicolor', 'Iris-virginica']
+    lowdimensiondata = isomap(trainingSet, 2, ('dist',20))
+    plotdata(lowdimensiondata, traininglabel, labellist)
