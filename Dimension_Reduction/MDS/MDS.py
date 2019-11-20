@@ -57,10 +57,10 @@ def mds(dist, d):
             B[i,j] = -0.5*(dist_square[i,j]-row_mean[i,0]-col_mean[0,j]+total_mean)
             B[j,i] = B[i,j]
     # B = -0.5 * (dist_square - row_mean - col_mean + total_mean)
-    print(symmetric(B))
+    # print(symmetric(B))
     # 矩阵的特征分解
     eigen_val, eigen_vec = linalg.eig(B)
-    print(eigen_val)
+    # print(eigen_val)
     val_index = argsort(-eigen_val)  # 将eigenvalue按照降序排列
     # 选取k个维度（特征值由大到小）
     eigen_low_value = zeros((1, d))[0]
