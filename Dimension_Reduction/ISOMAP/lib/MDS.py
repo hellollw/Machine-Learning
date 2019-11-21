@@ -60,6 +60,8 @@ def mds(dist, d):
     # print(symmetric(B))
     # 矩阵的特征分解
     eigen_val, eigen_vec = linalg.eig(B)
+    eigen_val = eigen_val.real  #转换成实数
+    eigen_vec = eigen_vec.real
     # print(eigen_val)
     val_index = argsort(-eigen_val)  # 将eigenvalue按照降序排列
     # 选取k个维度（特征值由大到小）
@@ -70,7 +72,7 @@ def mds(dist, d):
         eigen_low_value[di] = eigen_val[low_index]
         eigen_low_vector[:, di] = eigen_vec[:, low_index]
     # 判断矩阵是否为正定
-    if (eigen_low_value >= 0).all():
+    if (eigen_low_value > 0).all():
         # 取前d个特征值构成低维空间
         lowdimensionloc = eigen_vec[:, :d] * sqrt(diag(eigen_val[:d]))
         return lowdimensionloc

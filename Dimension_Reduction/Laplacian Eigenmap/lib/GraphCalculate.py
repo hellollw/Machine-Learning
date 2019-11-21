@@ -5,6 +5,8 @@
 """
 图论计算公式：
     不同核方式计算图的边界权值
+
+计算k近邻
 """
 
 from numpy import *
@@ -14,9 +16,7 @@ from numpy import *
 # 输出：对于i样本在m个样本数据中的核矩阵:dataK
 def kernelCal(datam, datai, kTup):
     """
-    # 定义核函数计算公式
-    # 输入：m个样本数据：datam, 一个想要进入核函数矩阵的样本数据i:datai, 描述核函数的元组:kTup
-    # 输出：对于i样本在m个样本数据中的核矩阵:dataK
+    dist返回距离的平方
     """
     m, n = shape(datam)
     datai = mat(datai).transpose()  # 转换为列向量,transpose()默认与.T相同
@@ -42,11 +42,11 @@ def kernelCal(datam, datai, kTup):
 
 # 选取k近邻构建稀疏矩阵
 # 输入：输入样本数据：datamat, 选择近邻构建方式:kTup
-# 输出：稀疏矩阵:kmat
+# 输出：稀疏矩阵:kmat(若边之间没有相连则取值为0）
 def constructKmat(datamat, kTup):
     curkTup = kTup[1:]
     m = shape(datamat)[0]
-    kmat = mat(zeros((m, m))) + inf
+    kmat = mat(zeros((m, m)))+inf
     for i in range(m):
         samplei = datamat[i, :]  # 取出样本
         dataKernal = kernelCal(datam=datamat, datai=samplei, kTup=curkTup)
