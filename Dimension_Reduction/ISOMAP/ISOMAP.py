@@ -42,16 +42,17 @@ def plotdata(dataMat, clusterassement, labellist):
 
 
 # 选取k近邻构建稀疏矩阵
-# 输入：输入样本数据：datamat, k近邻数量:k
+# 输入：输入样本数据：datamat, 选择近邻构建方式:kTup
 # 输出：稀疏矩阵:kmat
-def constructKmat(datamat, k):
+def constructKmat(datamat, kTup):
+    curkTup = kTup[1:]
     m = shape(datamat)[0]
     kmat = mat(zeros((m, m))) + inf
     for i in range(m):
         samplei = datamat[i, :]  # 取出样本
-        dataKernal = Knn.kernelCal(datam=datamat, datai=samplei, kTup=('dist',))
+        dataKernal = Knn.kernelCal(datam=datamat, datai=samplei, kTup=curkTup)
         sampleindex = dataKernal.T.A[0].argsort()  # 先转换为一维array，再返回从小到大的索引
-        for j in range(k):  # 取前k个近邻,构建稀疏矩阵（为对称矩阵）
+        for j in range(curkTup[2]):  # 取前k个近邻,构建稀疏矩阵（为对称矩阵）
             kmat[sampleindex[j], i] = dataKernal[sampleindex[j], 0]
             kmat[i, sampleindex[j]] = dataKernal[sampleindex[j], 0]  # 满足图的对称性
     return kmat
@@ -61,10 +62,19 @@ def constructKmat(datamat, k):
 # 输入：输入样本数据：datamat, 核方式:kTup
 # 输出：距离矩阵dist
 def constructDist(datamat, kTup):
+    """
+
+    :param kTup:可选形式：
+    1.rbf内核（'rbf',超参数:sigma=)
+    2.向量内积内核('lin',)
+    3.距离内核('dist',)
+    4.k近邻选取('knn',边界计算方式: , 计算方式参数: , k近邻居数量: )
+    :return: 图的距离表示矩阵
+    """
     m = shape(datamat)[0]
     dist = mat(zeros((m, m)))
     if kTup[0] == 'knn':  # knn近邻选取
-        dist = constructKmat(datamat, kTup[1])
+        dist = constructKmat(datamat, kTup)
     else:   #其余的都在核函数函数中
         for i in range(m):
             dist[:, i] = Knn.kernelCal(datamat, datamat[i, :], kTup)
@@ -97,5 +107,6 @@ if __name__ == '__main__':
     path = './test/iris.txt'
     trainingSet, traininglabel, testset, testlabel = Knn.readData(path)
     labellist = ['Iris-setosa', 'Iris-versicolor', 'Iris-virginica']
-    lowdimensiondata = isomap(trainingSet, 2, ('dist',20))
+    lowdimensiondata = isomap(trainingSet, 2, ('knn','dist',0,20))
     plotdata(lowdimensiondata, traininglabel, labellist)
+
