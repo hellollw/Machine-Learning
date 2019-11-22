@@ -1,12 +1,15 @@
 # -*- coding:utf-8 -*-
 # Author: Lu Liwen
-# Modified Time: 2019-11-21
+# Modified Time: 2019-11-22
 
 """
 图论计算公式：
     不同核方式计算图的边界权值
 
 计算k近邻
+
+修改：
+1.核运算计算距离采用矩阵计算形式，代替迭代方法计算
 """
 
 from numpy import *
@@ -31,11 +34,10 @@ def kernelCal(datam, datai, kTup):
             dataK[j, :] = dif.T * dif
         dataK = exp(dataK / (-2 * sigma ** 2))  # 元素除法
     elif kTup[0] == 'dist':  # 距离核
-        for j in range(m):
-            dataj = datam[j, :].T
-            dif = dataj - datai
-            dif = dif.T * dif
-            dataK[j, 0] = sum(dif)
+        # 使用矩阵运算
+        dif = datam.T-datai
+        dif_square = sum(multiply(dif,dif),0)
+        dataK = dif_square.T
     else:
         raise NameError('That kernel is not defined')
     return dataK
