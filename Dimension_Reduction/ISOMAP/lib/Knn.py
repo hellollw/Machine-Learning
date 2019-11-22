@@ -68,10 +68,9 @@ def kernelCal(datam, datai, kTup):
         dataK = exp(dataK / (-2 * sigma ** 2))  # 元素除法
     elif kTup[0] == 'dist':  # 距离核
         for j in range(m):
-            dataj = datam[j, :].T
-            dif = dataj - datai
-            dif = dif.T * dif
-            dataK[j, 0] = sum(dif)
+            dif = datam.T - datai
+            dif_square = sum(multiply(dif, dif), 0)
+            dataK = dif_square.T
     else:
         raise NameError('That kernel is not defined')
     return dataK
