@@ -4,17 +4,16 @@
 
 """
 使用tensorflow实现卷积神经网络编程
+
+1.tensorflow的图像读取
 """
 
 import tensorflow as tf
 import numpy as np
-sess = tf.InteractiveSession()  #先构建一个session在构建一个计算图
-a1 = [[1,0,0,0],[0,3,1,2],[6,0,0,0]]
-b = [[1,0,0,0],[3,1,1,2],[6,0,0,0]]
+from skimage import io
 
-prediction = tf.equal(tf.argmax(a1,axis=1),tf.argmax(b,axis=1))
-a = tf.reduce_mean(tf.cast(prediction,dtype=tf.float32))
+def hh():
+    return tf.constant('hhh'),tf.constant('123')
 
-
-# sess = tf.Session()
-print(a.eval()) #需要预先定义图
+image_shape = io.imread('./temp/test2/crystalline_0167.jpg')
+print(np.shape(image_shape))
