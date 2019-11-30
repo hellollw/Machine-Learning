@@ -42,7 +42,7 @@ def string2int(labelstring):
         label_index = int(Wholelabel.index(cur_label))
         labelint.append(label_index)  # 转换为对应的种类数字
 
-    return labelint, len(Wholelabel)
+    return labelint, int(len(Wholelabel))
 
 
 # 构造one_hot向量
@@ -58,7 +58,8 @@ def getOneHotLabel(file_label, label_number):
 
 # 按一定比重生成文件乱序的训练样本和测试样本集和(在这里进行了one-hot标签转换)
 # 输入:文件名队列file_name_array, 测试集比重:ratio, 样本标签数量:label_number
-# 输出:训练样本数据:trainfile_name, 训练样本标签:trainfile_label, 测试样本数据:testfile_name, 测试样本标签:testfile_label
+# 输出:训练样本数据:trainfile_name, 训练样本标签:trainfile_label, 训练样本标签种类:trainfile_num
+#       测试样本数据:testfile_name, 测试样本标签:testfile_label,测试样本标签种类:testlabel_num
 def getTrainAndTestData(path, ratio):
     # 生成文件名队列（name+label)，都为字符串格式
     file_name_list = []
@@ -84,7 +85,7 @@ def getTrainAndTestData(path, ratio):
     trainfile_name = file_name_array[m_test:, 0]
     trainfile_label, trainfile_num = string2int(file_name_array[m_test:, 1])
     trainfile_label_onehot = getOneHotLabel(trainfile_label, trainfile_num)
-    return trainfile_name, trainfile_label_onehot, testfile_name, testfile_label_onehot
+    return trainfile_name, trainfile_label_onehot, trainfile_num,testfile_name, testfile_label_onehot,testlabel_num
 
 
 # 生成输入的batch
@@ -94,7 +95,7 @@ def getBatch(filename, filelabel, batchsize, image_height, image_width):
     # 转换类型
     print('样本总数量为:%d'%np.shape(filename)[0])
     filename = tf.cast(filename, tf.string)
-    filelabel = tf.cast(filelabel, tf.int32)
+    filelabel = tf.cast(filelabel, tf.float32)
     # 构造文件名队列
     input_queue = tf.train.slice_input_producer([filename, filelabel], shuffle=False, num_epochs=1)  # 定义了样本放入文件名队列的方式
     imagename = input_queue[0]
@@ -123,8 +124,8 @@ if __name__ == '__main__':
     image_weight = 28
     i = 1
     # 获得训练数据,构件图
-    trainfile_name, trainfile_label, testfile_name, testfile_label = getTrainAndTestData(path, ratio=0.2)
-    image_batch, label_batch = getBatch(trainfile_name, trainfile_label, batchsize, image_height, image_weight)
+    trainfile_name, trainfile_label_onehot, trainfile_num,testfile_name, testfile_label_onehot,testlabel_num = getTrainAndTestData(path, ratio=0.2)
+    image_batch, label_batch = getBatch(trainfile_name, trainfile_label_onehot, batchsize, image_height, image_weight)
     # 计算图
     sess = tf.Session()
     sess.run(tf.local_variables_initializer())
