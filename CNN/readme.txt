@@ -1,3 +1,9 @@
+文件：
+    1.Reference为写代码时候的参考例程（包含了手写数字识别，读取图片例程)
+    2.CNN_BP.py是构建的图模型
+    3.TF_readImage.py是tensorflow读出图片的流程
+    4.result文件夹存储了训练好的卷积神经网络
+
 tensorflow的定义流程：
     1.构件图：
         计算图：是包含节点和边的网络。本节定义所有要使用的数据，也就是张量（tensor）对象（常量、变量和占位符），同时定义要执行的所有计算，即运算操作对象（Operation Object，简称 OP）。
