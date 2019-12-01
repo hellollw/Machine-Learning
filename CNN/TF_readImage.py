@@ -17,6 +17,7 @@ Tensorflow读取硬盘中的图片文件，构造数据训练所需要的batch�
 问题：
     1.numpy数组不能存放不同类型的值，自动转换为string类型
     2.TF中一些函数的使用需要初始化局部变量，故在计算图之前需要初始化变量（定义在main函数中的变量为局部变量)
+    3.当样本集过少时会产生测试样本并不能满足所有标签
 
 """
 import os
@@ -57,11 +58,17 @@ def getOneHotLabel(file_label, label_number):
 
 
 # 按一定比重生成文件乱序的训练样本和测试样本集和(在这里进行了one-hot标签转换)
-# 输入:文件名队列file_name_array, 测试集比重:ratio, 样本标签数量:label_number
+# 输入:文件名位置:path 测试集比重:ratio
 # 输出:训练样本数据:trainfile_name, 训练样本标签:trainfile_label, 训练样本标签种类:trainfile_num
 #       测试样本数据:testfile_name, 测试样本标签:testfile_label,测试样本标签种类:testlabel_num
 def getTrainAndTestData(path, ratio):
     # 生成文件名队列（name+label)，都为字符串格式
+    """
+
+    :param path: 文件名位置
+    :param ratio: 测试集比重
+    :return:
+    """
     file_name_list = []
     file_label_list = []
     for forder_name in os.listdir(path):
@@ -77,14 +84,16 @@ def getTrainAndTestData(path, ratio):
     np.random.shuffle(file_name_array)
     m = np.shape(file_name_array)[0]
     m_test = int(np.ceil(m * ratio))  # 获得测试样本数量,转换为整型
-    # 获得测试集样本
-    testfile_name = file_name_array[0:m_test, 0]
-    testfile_label, testlabel_num = string2int(file_name_array[0:m_test, 1])
-    testfile_label_onehot = getOneHotLabel(testfile_label, testlabel_num)
+
     # 获得训练集样本
     trainfile_name = file_name_array[m_test:, 0]
     trainfile_label, trainfile_num = string2int(file_name_array[m_test:, 1])
     trainfile_label_onehot = getOneHotLabel(trainfile_label, trainfile_num)
+
+    # 获得测试集样本
+    testfile_name = file_name_array[0:m_test, 0]
+    testfile_label, testlabel_num = string2int(file_name_array[0:m_test, 1])
+    testfile_label_onehot = getOneHotLabel(testfile_label, trainfile_num)
     return trainfile_name, trainfile_label_onehot, trainfile_num,testfile_name, testfile_label_onehot,testlabel_num
 
 
@@ -120,13 +129,13 @@ if __name__ == '__main__':
     # 定义需要使用到的系数
     path = './temp/'
     ratio = 0.2
-    batchsize = 5
+    batchsize = 1
     image_height = 28
     image_weight = 28
     i = 1
     # 获得训练数据,构件图
     trainfile_name, trainfile_label_onehot, trainfile_num,testfile_name, testfile_label_onehot,testlabel_num = getTrainAndTestData(path, ratio=0.2)
-    image_batch, label_batch = getBatch(trainfile_name, trainfile_label_onehot, batchsize, image_height, image_weight)
+    image_batch, label_batch = getBatch(testfile_name, testfile_label_onehot, batchsize, image_height, image_weight)
     # 计算图
     sess = tf.Session()
     sess.run(tf.local_variables_initializer())

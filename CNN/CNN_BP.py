@@ -83,7 +83,7 @@ if __name__ == '__main__':
     # 定义需要使用到的系数
     path = './temp/'
     ratio = 0.2
-    batchsize = 20
+    batchsize = 10
     image_height = 28
     image_weight = 28
     i = 1
@@ -91,8 +91,10 @@ if __name__ == '__main__':
     trainfile_name, trainfile_label_onehot, trainlabel_num, testfile_name, testfile_label_onehot, testlabel_num = \
         TF_read.getTrainAndTestData(path, ratio=0.2)
     # 构造batch
-    image_batch, label_batch = TF_read.getBatch(trainfile_name, trainfile_label_onehot, batchsize, image_height,
-                                                image_weight)
+    # image_batch, label_batch = TF_read.getBatch(trainfile_name, trainfile_label_onehot, batchsize, image_height,
+    #                                             image_weight) #训练过程
+    image_batch, label_batch = TF_read.getBatch(testfile_name, testfile_label_onehot, batchsize, image_height,
+                                                image_weight)   #测试过程
     # 构造图
     sess = tf.InteractiveSession()  # 先构建session再构造图
 
@@ -142,7 +144,7 @@ if __name__ == '__main__':
 
     # 求取准确率
     correct_prediction = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
-    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))  #当前正确率的均值
 
     # 保存数据
     saver = tf.train.Saver()  # 默认保存所有变量
@@ -155,23 +157,47 @@ if __name__ == '__main__':
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess, coord)  # 把张量tensor推入内存之中
 
+    """
+    训练代码
+    """
+    # try:
+    #     i = 0
+    #     while not coord.should_stop():
+    #         image, label = sess.run([image_batch, label_batch])  # 读取数据
+    #         if i % 1 == 0:
+    #             train_accuracy = accuracy.eval(
+    #                 feed_dict={x: image, y: label, keep_prob: 1.0})  # feed不能为张量
+    #             print('step:%d ' % i + "training accuracy：%f" % train_accuracy)
+    #         train_step.run(feed_dict={x: image, y: label, keep_prob: 1.0})
+    #         i += 1
+    # except tf.errors.OutOfRangeError:
+    #     print('complete')
+    # finally:
+    #     coord.request_stop()  # 停止读入线程
+    # coord.join(threads)  # 线程加入主线程，等待主线程结束
+    # saver.save(sess, './model.ckpt')
+    # sess.close()
+    # end_time = time.time()
+    # print('程序运行耗时为：%.8s s' % (end_time - start_time))
+
+    """
+    测试代码
+    """
+    saver.restore(sess, './result/model.ckpt')  # 和之前保存的文件名一致,读取图
     try:
         i = 0
+        cur_accuracy = 0
         while not coord.should_stop():
-            image, label = sess.run([image_batch, label_batch])  # 读取数据
-            print(np.shape(image))
-            if i % 1 == 0:
-                train_accuracy = accuracy.eval(
-                    feed_dict={x: image, y: label, keep_prob: 1.0})  # feed不能为张量
-                print('step:%d ' % i + "training accuracy：%f" % train_accuracy)
-            train_step.run(feed_dict={x: image, y: label, keep_prob: 1.0})
+            image, label = sess.run([image_batch,label_batch])  # 在该处执行时弹出错误
+            cur_accuracy+=accuracy.eval(feed_dict={x: image,y:label,keep_prob:1.0})
             i += 1
+            print(i,cur_accuracy)
     except tf.errors.OutOfRangeError:
         print('complete')
+        print('测试正确率为:%f'%(cur_accuracy/i))
     finally:
         coord.request_stop()  # 停止读入线程
-    coord.join(threads)  # 线程加入主线程，等待主线程结束
-    saver.save(sess, './model.ckpt')
+    coord.join(threads)
     sess.close()
     end_time = time.time()
     print('程序运行耗时为：%.8s s' % (end_time - start_time))
