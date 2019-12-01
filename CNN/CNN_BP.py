@@ -34,6 +34,9 @@
 
 重点：
     1.每一步数据的维度需要精准的计算好
+    2.数据的读取先用计算图取出数据，数据由tensor类型转换为ndarray型，再放入feed中
+    3.placeholder占位符定义的维度需要与输入数据的维度一致
+    4.在TF中的全局变量和局部变量有着本质区别，定义局部变量需要声明所在的变量集合
 
 """
 
@@ -85,7 +88,7 @@ if __name__ == '__main__':
     image_weight = 28
     i = 1
     # 获得训练数据
-    trainfile_name, trainfile_label_onehot, trainfile_num, testfile_name, testfile_label_onehot, testlabel_num = \
+    trainfile_name, trainfile_label_onehot, trainlabel_num, testfile_name, testfile_label_onehot, testlabel_num = \
         TF_read.getTrainAndTestData(path, ratio=0.2)
     # 构造batch
     image_batch, label_batch = TF_read.getBatch(trainfile_name, trainfile_label_onehot, batchsize, image_height,
@@ -94,16 +97,16 @@ if __name__ == '__main__':
     sess = tf.InteractiveSession()  # 先构建session再构造图
 
     # 预定义输入x，输出y（即预定义占位符——先预定义过程，之后在执行的时候在具体赋值，预定义维度）
-    x = tf.placeholder(tf.float32, shape=[None, 784])  # None表示占时不能的确定维度，根据输入的数据改变！
-    y = tf.placeholder(tf.float32, shape=[None, 10])
+    x = tf.placeholder(tf.float32, shape=[None, 28, 28, 1])  # None表示占时不能确定的维度，根据输入的数据改变！
+    y = tf.placeholder(tf.float32, shape=[None, trainlabel_num])
     keep_prob = tf.placeholder(
         tf.float32)  # 减少计算量dropout（防止过拟合，神经元会被以一定概率选中并在这次迭代中不更新权值），只有当keep_prob = 1时，才是所有的神经元都参与工作
     # 调整输入样本结构
-    x_image = tf.reshape(x, [-1, 28, 28, 3])  # 输入图片格式：[ batch, in_height, in_weight, in_channel ]
+    x_image = tf.reshape(x, [-1, 28, 28, 1])  # 输入图片格式：[ batch, in_height, in_weight, in_channel ]
 
     # 定义卷积层1:
-    # 卷积核1：patch = 5x5; in size:3; out size:32; 激活函数:Relu
-    W_conv1 = WeightVariable([5, 5, 3, 32])  # 卷积核格式：shape为 [ filter_height, filter_weight, in_channel, out_channels ]
+    # 卷积核1：patch = 5x5; in size:1; out size:32; 激活函数:Relu
+    W_conv1 = WeightVariable([5, 5, 1, 32])  # 卷积核格式：shape为 [ filter_height, filter_weight, in_channel, out_channels ]
     b_conv1 = biasVariable([32])  # 偏移量对应out size
     h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
     # 定义池化层1
@@ -126,26 +129,27 @@ if __name__ == '__main__':
                                keep_prob)  # 减少计算量dropout（防止过拟合，神经元会被以一定概率选中并在这次迭代中不更新权值），只有当keep_prob = 1时，才是所有的神经元都参与工作
 
     # 定义全连接层2（10个神经元，对应输出维度）
-    W_fc2 = WeightVariable([1024, trainfile_num])
-    b_fc2 = biasVariable([trainfile_num])
+    W_fc2 = WeightVariable([1024, trainlabel_num])
+    b_fc2 = biasVariable([trainlabel_num])
     prediction = tf.matmul(h_fc1_drop, W_fc2) + b_fc2  # 结果对应预测结果
 
     # 定义损失函数（可以直接用向量相减运算）
     loss = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=prediction))  # 二次代价函数:预测值与真实值的误差,同时求取均值
+        tf.nn.softmax_cross_entropy_with_logits_v2(labels=y, logits=prediction))  # 二次代价函数:预测值与真实值的误差,同时求取均值
 
     # 梯度下降法求解，选用AdamOptimizer优化器
     train_step = tf.train.AdamOptimizer(1e-4).minimize(loss)
 
     # 求取准确率
-    correct_prediction = tf.equal(tf.argmax(prediction,1),tf.argmax(y,1))
-    accuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
+    correct_prediction = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
     # 保存数据
-    saver = tf.train.Saver()    #默认保存所有变量
+    saver = tf.train.Saver()  # 默认保存所有变量
 
     # 初始化变量
     sess.run(tf.local_variables_initializer())
+    sess.run(tf.global_variables_initializer())
 
     # 初始化读取数据线程
     coord = tf.train.Coordinator()
@@ -154,20 +158,20 @@ if __name__ == '__main__':
     try:
         i = 0
         while not coord.should_stop():
-            if i % 100 == 0:
-                train_accuracy = accuracy.eval(feed_dict={x:image_batch,y:label_batch,keep_prob: 1.0})
-                print('step:%d '%i+"training accuracy：%f"%train_accuracy)
-            train_step.run(feed_dict={x:image_batch,y:label_batch,keep_prob: 1.0})
-            i+=1
+            image, label = sess.run([image_batch, label_batch])  # 读取数据
+            print(np.shape(image))
+            if i % 1 == 0:
+                train_accuracy = accuracy.eval(
+                    feed_dict={x: image, y: label, keep_prob: 1.0})  # feed不能为张量
+                print('step:%d ' % i + "training accuracy：%f" % train_accuracy)
+            train_step.run(feed_dict={x: image, y: label, keep_prob: 1.0})
+            i += 1
     except tf.errors.OutOfRangeError:
         print('complete')
     finally:
         coord.request_stop()  # 停止读入线程
     coord.join(threads)  # 线程加入主线程，等待主线程结束
-    saver.save(sess,'./model.ckpt')
+    saver.save(sess, './model.ckpt')
     sess.close()
     end_time = time.time()
     print('程序运行耗时为：%.8s s' % (end_time - start_time))
-
-
-

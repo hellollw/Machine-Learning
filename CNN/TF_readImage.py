@@ -104,6 +104,7 @@ def getBatch(filename, filelabel, batchsize, image_height, image_width):
     image_contents = tf.read_file(imagename)
     image = tf.image.decode_jpeg(image_contents, channels=3)  # 图像解码
     image = tf.image.resize_image_with_crop_or_pad(image, image_height, image_width)    #图像裁剪
+    image = tf.image.rgb_to_grayscale(image)    # 转换为灰度图
     image = tf.image.per_image_standardization(image)  # image的预处理,对图像矩阵进行归一化处理
     # 构造训练batch
     image_batch, label_batch = tf.train.batch([image, imagelabel],
