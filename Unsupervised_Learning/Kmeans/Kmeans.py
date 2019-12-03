@@ -15,18 +15,16 @@ RuntimeWarning: Mean of empty slice.
 """
 
 from numpy import *
-import matplotlib
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 
 
 # 将训练集图示出来（适用于二维空间）
-# 输入：训练集：dataMat, 簇中心：centroids, 各个样本分类：clusterassement
+# 输入：训练集：dataMat, 簇中心：centroids, 各个样本分类：clusterassement, 画图种类:method
 # 输出：显示图像
-def plotdata(dataMat, centroids, clusterassement):
+def plotdata(dataMat, centroids, clusterassement, method):
     fig = plt.figure()
     ax0 = fig.add_subplot(111)
-    ax0.set(title='Datashow', ylabel='Y-Axis', xlabel='X-Axis')
-
+    ax0.set(title=method, ylabel='Y-Axis', xlabel='X-Axis')
     markers = ['+', 'o', '*', 'x', 'd', '.', 'd', '^']
     colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k', 'w']
 
@@ -167,13 +165,13 @@ def biKmeans(dataMat, k, distMeasure=distEclud):
 
 # 主函数
 if __name__ == '__main__':
-    dataSet = loadDataSet('testSet.txt')
+    dataSet = loadDataSet('./test/trainingSet_Unlabel.txt')
     dataMat = mat(dataSet)
     centroids, clusterassement = biKmeans(dataMat, 4)
-    plotdata(dataMat, centroids, clusterassement)
+    plotdata(dataMat, centroids, clusterassement, 'biKmeans')
     SSE_bi = sum(clusterassement[:, 1])
-    print('bikeams的误差为：', SSE_bi)
+    print('bikmeans的误差为：', SSE_bi)
     Kcentroids, Kclusterassement = kMeans(dataMat, 4)
-    plotdata(dataMat, Kcentroids, Kclusterassement)
+    plotdata(dataMat, Kcentroids, Kclusterassement, 'Kmeans')
     SSE_K = sum(Kclusterassement[:, 1])
     print('Kmeans的误差为：', SSE_K)
